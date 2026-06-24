@@ -1,0 +1,132 @@
+# ── Benchmark scenarios ────────────────────────────────────────────────────────
+ 
+SCENARIOS = {
+ 
+    # S1 — 2D baseline (correct)
+    # Ball at rest, 5N force for 0.1s. Resulting position and velocity
+    # are physically consistent. Equivalent to the "no perturbation"
+    # condition in LeWM Fig.8.
+    "normal": {
+        "description": "Ball pushed — correct 2D transition",
+        "etat_t" : {"object": "ball", "position": [1.0, 0.05],
+                    "velocity": [0.0, 0.0], "on_ground": True},
+        "action" : {"force": [5.0, 0.0], "dt": 0.1},
+        "etat_t1": {"object": "ball", "position": [1.02, 0.05],
+                    "velocity": [0.4, 0.0], "on_ground": True},
+        "expected": True
+    },
+ 
+    # S2 — Spatial continuity violation (2D)
+    # Jump from x=1.0 to x=3.8 in 0.1s implies 28 m/s — physically impossible.
+    # Direct analog of the LeWM teleportation test (Fig.8).
+    "teleport": {
+        "description": "Teleportation — spatial continuity violation (LeWM Fig.8)",
+        "etat_t" : {"object": "block", "position": [1.0, 0.05],
+                    "velocity": [0.1, 0.0], "on_ground": True},
+        "action" : {"force": [2.0, 0.0], "dt": 0.1},
+        "etat_t1": {"object": "block", "position": [3.8, 0.05],
+                    "velocity": [0.1, 0.0], "on_ground": True},
+        "expected": False
+    },
+ 
+    # S3 — Energy conservation violation (2D)
+    # Zero force, velocity jumps from 0.5 to 8.0 m/s — spontaneous acceleration.
+    "energy": {
+        "description": "Spontaneous acceleration — energy conservation violation",
+        "etat_t" : {"object": "ball", "position": [2.0, 0.05],
+                    "velocity": [0.5, 0.0], "on_ground": True},
+        "action" : {"force": [0.0, 0.0], "dt": 0.1},
+        "etat_t1": {"object": "ball", "position": [2.1, 0.05],
+                    "velocity": [8.0, 0.0], "on_ground": True},
+        "expected": False
+    },
+ 
+    # S4a — Gravity violation on Earth (2D)
+    # Cube stationary in mid-air on Earth — impossible without support.
+    # Same physical state as S4b (ISS) but opposite expected verdict.
+    # Demonstrates that the judge uses context, not numerical values alone.
+    # NOTE: single failure case of the triumvirate (split verdict 2/3 PLAUSIBLE).
+    "gravity_violation": {
+        "description": "Floating object on Earth — gravity violation",
+        "etat_t" : {"object": "cube", "position": [1.5, 1.2],
+                    "velocity": [0.0, 0.0], "on_ground": False,
+                    "context": "Earth surface, g=9.81 m/s², open air, no support"},
+        "action" : {"force": [0.0, 0.0], "dt": 0.5},
+        "etat_t1": {"object": "cube", "position": [1.5, 1.2],
+                    "velocity": [0.0, 0.0], "on_ground": False},
+        "expected": False
+    },
+ 
+    # S4b — Same physical state, ISS context (2D)
+    # Stationary object in microgravity — plausible.
+    # Symmetric counterpart to S4a: identical triplet, opposite verdict.
+    # Instantiates a metamorphic relation: verdict must flip with gravity context.
+    "gravity_iss": {
+        "description": "Floating object on ISS — correct in microgravity",
+        "etat_t" : {"object": "cube", "position": [1.5, 1.2],
+                    "velocity": [0.0, 0.0], "on_ground": False,
+                    "context": "ISS, microgravity environment, g=0 m/s2"},
+        "action" : {"force": [0.0, 0.0], "dt": 0.5},
+        "etat_t1": {"object": "cube", "position": [1.5, 1.2],
+                    "velocity": [0.0, 0.0], "on_ground": False},
+        "expected": True
+    },
+ 
+    # S5 — Correct Earth gravity (2D)
+    # Cube released from h=2.0m, g=9.81 m/s², dt=0.5s.
+    # y_t1 = 2.0 - 0.5*9.81*0.25 = 0.774m | vy_t1 = -4.905 m/s
+    "gravity_earth": {
+        "description": "Object falling on Earth — correct transition g=9.81 m/s²",
+        "etat_t" : {"object": "cube", "position": [1.5, 2.0],
+                    "velocity": [0.0, 0.0], "on_ground": False,
+                    "context": "Earth gravity g=9.81 m/s², no support below"},
+        "action" : {"force": [0.0, 0.0], "dt": 0.5},
+        "etat_t1": {"object": "cube", "position": [1.5, 0.774],
+                    "velocity": [0.0, -4.905], "on_ground": False},
+        "expected": True
+    },
+ 
+    # S6 — Martian gravity, domain transfer (2D)
+    # Titanium glass on Mars, g=3.72 m/s², dt=0.5s.
+    # y_t1 = 1.0 - 0.5*3.72*0.25 = 0.535m | vy_t1 = -1.86 m/s
+    # Tests generalization to a non-standard physical environment.
+    "verre_mars": {
+        "description": "Glass falling on Mars — Martian gravity g=3.72 m/s²",
+        "etat_t" : {"object": "titanium_glass", "position": [0.5, 1.0],
+                    "velocity": [0.0, 0.0], "on_ground": False,
+                    "context": "Martian gravity g=3.72 m/s², CO2 atmosphere"},
+        "action" : {"force": [0.0, 0.0], "dt": 0.5},
+        "etat_t1": {"object": "titanium_glass", "position": [0.5, 0.535],
+                    "velocity": [0.0, -1.86], "on_ground": False},
+        "expected": True
+    },
+ 
+    # S7 — 3D baseline (correct)
+    # Ball pushed along x in 3D space, with gravitational component on z.
+    # z_t1 = 1.0 - 0.5*9.81*0.01 = 0.951m | coordinates: [x, y, z], z = vertical.
+    "normal_3d": {
+        "description": "Ball pushed in 3D space — correct transition",
+        "etat_t" : {"object": "ball", "position": [1.0, 0.5, 1.0],
+                    "velocity": [0.0, 0.0, 0.0], "on_ground": False,
+                    "context": "3D space, Earth gravity g=9.81 m/s² along z-axis"},
+        "action" : {"force": [5.0, 0.0, 0.0], "dt": 0.1},
+        "etat_t1": {"object": "ball", "position": [1.02, 0.5, 0.951],
+                    "velocity": [0.4, 0.0, -0.981], "on_ground": False},
+        "expected": True
+    },
+ 
+    # S8 — 3D spatial teleportation
+    # Impossible jump across all three axes simultaneously.
+    # Extension of the S2 spatial continuity test to 3D.
+    "teleport_3d": {
+        "description": "3D teleportation — spatial continuity violation in 3D",
+        "etat_t" : {"object": "block", "position": [1.0, 0.5, 0.5],
+                    "velocity": [0.1, 0.0, 0.0], "on_ground": False,
+                    "context": "3D space, Earth gravity"},
+        "action" : {"force": [2.0, 0.0, 0.0], "dt": 0.1},
+        "etat_t1": {"object": "block", "position": [3.8, 2.5, 3.2],
+                    "velocity": [0.1, 0.0, 0.0], "on_ground": False},
+        "expected": False
+    },
+}
+ 
