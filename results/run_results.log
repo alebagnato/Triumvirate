@@ -1,0 +1,254 @@
+================================================================================
+VoE TRIUMVIRATE BENCHMARK — EXECUTION LOG
+Submitted to ICTSS 2026 (anonymized for blind review)
+Models: Gemma-3n (6.9B) | Mistral-7B-Instruct-v0.3 (7B) | Llama-3.2-3B (3B)
+Hardware: Consumer laptop, CPU-only, 24GB RAM, no GPU
+================================================================================
+
+------------------------------------------------------------
+S1 | Inertial push (2D baseline)
+    Description : Ball pushed — correct 2D transition
+    Expected    : PLAUSIBLE
+------------------------------------------------------------
+  [gemma  ]  PLAUSIBLE   score=0.95  (49.6s)
+             reasoning: The ball receives a force in the y-direction,
+             causing it to accelerate. The change in position and
+             velocity are consistent with Newton's second law.
+             violations: []
+
+  [llama  ]  IMPLAUSIBLE score=0.00  (25.7s)
+             reasoning: The ball's acceleration is not consistent with
+             the applied force, and its velocity does not respect inertia.
+             violations: [energy conservation, inertia]
+
+  [mistral]  PLAUSIBLE   score=1.00  (87.7s)
+             reasoning: The action applied a horizontal force to the ball
+             on the ground, causing it to accelerate according to
+             Newton's second law.
+             violations: []
+
+  Verdict : PLAUSIBLE  [2/3]  split
+  Score   : 0.65 (avg)
+  Result  : CORRECT
+
+------------------------------------------------------------
+S2 | Discontinuous jump (2D spatial teleportation)
+    Description : Block jumps x=1.0m to x=3.8m in 0.1s
+    Expected    : IMPLAUSIBLE
+------------------------------------------------------------
+  [gemma  ]  IMPLAUSIBLE score=0.00  (73.7s)
+             reasoning: The observed change in position is physically
+             implausible. A force of 2N over 0.1s would result in a
+             displacement far smaller than observed.
+             violations: [Spatial continuity: block position changes
+             by 3.7m in a single time step with only a small force.]
+
+  [llama  ]  IMPLAUSIBLE score=0.00  (30.0s)
+             reasoning: The object teleported from [1.0, 0.05] to
+             [3.8, 0.05], violating spatial continuity.
+             violations: [spatial continuity]
+
+  [mistral]  IMPLAUSIBLE score=0.00  (80.4s)
+             reasoning: The observed state transition violates spatial
+             continuity as the object appears to teleport without
+             moving through space.
+             violations: [spatial continuity]
+
+  Verdict : IMPLAUSIBLE  [0/3]  unanimous
+  Score   : 0.00 (avg)
+  Result  : CORRECT
+
+------------------------------------------------------------
+S3 | Spontaneous acceleration (energy conservation violation)
+    Description : Ball accelerates 0.5 to 8.0 m/s, zero force
+    Expected    : IMPLAUSIBLE
+------------------------------------------------------------
+  [gemma  ]  IMPLAUSIBLE score=0.10  (62.9s)
+             reasoning: The observed acceleration is inconsistent with
+             the applied force of zero. Without a net force, inertia
+             dictates that the velocity must remain constant.
+             violations: [Energy conservation: velocity changed from
+             0.5 to 8.0 m/s with no net force applied,
+             Inertia: sudden velocity change without external force.]
+
+  [llama  ]  IMPLAUSIBLE score=0.00  (32.9s)
+             reasoning: The object's velocity increased without an
+             applied force, violating energy conservation and inertia.
+             violations: [energy conservation, inertia]
+
+  [mistral]  IMPLAUSIBLE score=0.00  (89.7s)
+             reasoning: The observed acceleration of the ball without
+             an applied force violates energy conservation.
+             violations: [energy conservation]
+
+  Verdict : IMPLAUSIBLE  [0/3]  unanimous
+  Score   : 0.03 (avg)
+  Result  : CORRECT
+
+------------------------------------------------------------
+S4a | Static levitation on Earth (gravity violation)
+     Description : Cube floating motionless, no support, Earth g=9.81
+     Expected    : IMPLAUSIBLE
+     Note        : Single failure case of the triumvirate
+------------------------------------------------------------
+  [gemma  ]  PLAUSIBLE   score=0.80  (103.8s)
+             reasoning: The object is floating, meaning it is not in
+             contact with the ground and not accelerating due to
+             gravity. Applying zero force leaves velocity at zero.
+             violations: []
+
+  [llama  ]  PLAUSIBLE   score=1.00  (51.9s)
+             reasoning: No force was applied, so inertia and energy
+             conservation are respected. The object's velocity remains
+             zero due to no acceleration.
+             violations: []
+
+  [mistral]  IMPLAUSIBLE score=0.00  (97.5s)
+             reasoning: The object is floating without any force being
+             applied to counteract gravity, which contradicts the law
+             of gravity.
+             violations: [gravity]
+
+  Verdict : PLAUSIBLE  [2/3]  split
+  Score   : 0.60 (avg)
+  Result  : ERROR (expected IMPLAUSIBLE)
+
+------------------------------------------------------------
+S4b | Static levitation on ISS (microgravity, context-dependent)
+     Description : Identical state to S4a, context: ISS (g=0)
+     Expected    : PLAUSIBLE
+------------------------------------------------------------
+  [gemma  ]  PLAUSIBLE   score=1.00  (87.8s)
+             reasoning: In microgravity, an object in freefall will
+             maintain its velocity and position unless acted upon by
+             a force. Since no force is applied, the state is correct.
+             violations: []
+
+  [llama  ]  PLAUSIBLE   score=1.00  (55.6s)
+             reasoning: No forces were applied, so inertia and energy
+             conservation are respected. The object's velocity remains
+             zero due to no acceleration.
+             violations: []
+
+  [mistral]  PLAUSIBLE   score=1.00  (104.7s)
+             reasoning: In the given scenario, there is no force applied
+             to the object and it is floating in a microgravity
+             environment. Therefore the transition is physically
+             plausible.
+             violations: []
+
+  Verdict : PLAUSIBLE  [3/3]  unanimous
+  Score   : 1.00 (avg)
+  Result  : CORRECT
+
+------------------------------------------------------------
+S5 | Free fall on Earth (gravity positive counterpart to S4a)
+    Description : Cube falls from h=2.0m, g=9.81 m/s²
+    Expected    : PLAUSIBLE
+------------------------------------------------------------
+  [gemma  ]  PLAUSIBLE   score=0.95  (86.7s)
+             reasoning: The object is falling under Earth's gravity
+             (g=9.81 m/s²). The change in velocity is solely due to
+             gravitational acceleration.
+             violations: []
+
+  [llama  ]  PLAUSIBLE   score=0.95  (39.0s)
+             reasoning: The object's downward velocity increased due
+             to gravity, and its position decreased accordingly.
+             violations: []
+
+  [mistral]  PLAUSIBLE   score=1.00  (110.7s)
+             reasoning: The object is falling under the influence of
+             Earth's gravity. Velocity and position changes are
+             consistent with g=9.81 m/s².
+             violations: []
+
+  Verdict : PLAUSIBLE  [3/3]  unanimous
+  Score   : 0.97 (avg)
+  Result  : CORRECT
+
+------------------------------------------------------------
+S6 | Free fall on Mars (domain transfer, g=3.72 m/s²)
+    Description : Titanium glass falling on Mars
+    Expected    : PLAUSIBLE
+------------------------------------------------------------
+  [gemma  ]  PLAUSIBLE   score=0.95  (66.6s)
+             reasoning: The glass is falling under Martian gravity.
+             The applied force is zero; the change in velocity is
+             due to gravity at g=3.72 m/s².
+             violations: []
+
+  [llama  ]  PLAUSIBLE   score=0.95  (38.6s)
+             reasoning: The object's velocity is consistent with the
+             applied force and its position changes due to gravity.
+             violations: []
+
+  [mistral]  PLAUSIBLE   score=0.95  (104.2s)
+             reasoning: The glass's position and velocity change due
+             to Martian gravity, consistent with Newton's second law.
+             violations: []
+
+  Verdict : PLAUSIBLE  [3/3]  unanimous
+  Score   : 0.95 (avg)
+  Result  : CORRECT
+
+------------------------------------------------------------
+S7 | Inertial push (3D baseline)
+    Description : Ball pushed in 3D space — correct transition
+    Expected    : PLAUSIBLE
+------------------------------------------------------------
+  [gemma  ]  PLAUSIBLE   score=0.95  (77.1s)
+             reasoning: The ball's motion is consistent with Newton's
+             second law and Earth gravity. The change in position and
+             velocity along all axes is physically correct.
+             violations: []
+
+  [llama  ]  PLAUSIBLE   score=0.93  (40.0s)
+             reasoning: The force applied to the ball respects energy
+             conservation. Spatial continuity is maintained across
+             all three axes.
+             violations: []
+
+  [mistral]  PLAUSIBLE   score=1.00  (109.3s)
+             reasoning: The action applied a horizontal force to the
+             ball, causing it to accelerate according to Newton's
+             second law. The 3D transition is physically correct.
+             violations: []
+
+  Verdict : PLAUSIBLE  [3/3]  unanimous
+  Score   : 0.96 (avg)
+  Result  : CORRECT
+
+------------------------------------------------------------
+S8 | Discontinuous jump (3D spatial teleportation)
+    Description : Block teleports across all three axes simultaneously
+    Expected    : IMPLAUSIBLE
+------------------------------------------------------------
+  [gemma  ]  IMPLAUSIBLE score=0.00  (88.6s)
+             reasoning: The observed change in position is too large
+             for the applied force and timestep. The displacement
+             implies instantaneous movement across all three axes.
+             violations: [Spatial continuity: block moved from
+             [1.0,0.5,0.5] to [3.8,2.5,3.2] in a single timestep
+             with force [2.0,0.0,0.0].]
+
+  [llama  ]  IMPLAUSIBLE score=0.00  (47.2s)
+             reasoning: The object teleported to a new position without
+             any visible means of propulsion or deceleration, violating
+             spatial continuity.
+             violations: [spatial continuity, energy conservation]
+
+  [mistral]  IMPLAUSIBLE score=0.00  (105.1s)
+             reasoning: The observed state transition violates spatial
+             continuity as the object appears to teleport without
+             moving through space.
+             violations: [Spatial continuity]
+
+  Verdict : IMPLAUSIBLE  [0/3]  unanimous
+  Score   : 0.00 (avg)
+  Result  : CORRECT
+
+================================================================================
+GLOBAL RESULT : 8/9 correct
+Unanimous     : 7/9
+================================================================================
