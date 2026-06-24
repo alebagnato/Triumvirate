@@ -47,3 +47,7 @@ localhost:1234). No GPU required.
 | S7 | Inertial push (3D baseline) | PLAUSIBLE | ✓ PLAUSIBLE | unanimous |
 | S8 | 3D spatial teleportation | IMPLAUSIBLE | ✓ IMPLAUSIBLE | unanimous |
 
+## Reproducibility
+
+Requires: Python 3.10+, LM Studio running locally with the three
+models loaded. See `triumvirate.py` for the full pipeline.
